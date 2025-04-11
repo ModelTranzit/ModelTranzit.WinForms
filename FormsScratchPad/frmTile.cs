@@ -72,7 +72,7 @@ namespace Dizignit.Presentation
             lblSize.Name = "lblSize";
             lblSize.Size = new Size(100, 23);
             lblSize.TabIndex = 5;
-            lblSize.Text = "5000";
+            lblSize.Text = "100";
             // 
             // lblZoom
             // 
@@ -264,7 +264,11 @@ namespace Dizignit.Presentation
             // this will find and replace colors in the bitmap. 
             // we will neet to create a bitmap and loop through the pixels
 
-            string apiKey = "AIzaSyBPwi_37a_esvHTbKkiTeKh6IBBUvlP4Pk";
+            string apiKey = Environment.GetEnvironmentVariable("GoogleMapsAPIKey");
+
+            if (string.IsNullOrEmpty(apiKey))
+                throw new Exception("GoogleMapsAPIKey variable not set.");
+
             string center = "30th+Street+Station,Philadelphia,PA"; // Location name
             string zoom = lblZoom.Text; // Zoom level (1 = World, 20 = Building)
             string size = lblSize.Text + "x" + lblSize.Text; // Tile size in pixels

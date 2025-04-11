@@ -1,0 +1,12 @@
+[*.cs]
+# Define the naming rule for public properties
+dotnet_naming_rule.public_properties_should_be_camel_case.severity = warn
+dotnet_naming_rule.public_properties_should_be_camel_case.symbols = public_properties
+dotnet_naming_rule.public_properties_should_be_camel_case.style = camel_case
+
+# Define the symbol group for public properties
+dotnet_naming_symbols.public_properties.applicable_kinds = property
+dotnet_naming_symbols.public_properties.applicable_accessibilities = public
+
+# Define the naming style for CamelCase
+dotnet_naming_style.camel_case.capitalization = camel_case
