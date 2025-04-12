@@ -1,10 +1,12 @@
-﻿using Dizignit.Domain;
+﻿using Dizignit.DAL;
+using Dizignit.Domain;
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -264,6 +266,8 @@ namespace Dizignit.Presentation
             // this will find and replace colors in the bitmap. 
             // we will neet to create a bitmap and loop through the pixels
 
+            var logger = new SQLLogger();
+
             string apiKey = Environment.GetEnvironmentVariable("GoogleMapsAPIKey");
 
             if (string.IsNullOrEmpty(apiKey))
@@ -286,6 +290,8 @@ namespace Dizignit.Presentation
                 if (response.IsSuccessStatusCode)
                 {
                     var image = await FetchImageAsync(url);
+                    // this logs the full colr bitmap to transLog
+                    logger.Log(image); // there is a bug here in that the Log() method is still publicly exposed. This will likely error.
 
                     if (image != null)
                     {

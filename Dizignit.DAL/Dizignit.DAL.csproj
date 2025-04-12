@@ -7,7 +7,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="New folder\**" />
+    <EmbeddedResource Remove="New folder\**" />
+    <None Remove="New folder\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="TileContext.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dizignit.Core\Dizignit.Core.csproj" />
   </ItemGroup>
 
 </Project>

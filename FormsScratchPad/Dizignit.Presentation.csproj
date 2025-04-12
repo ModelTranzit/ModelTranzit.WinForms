@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Dizignit.DAL\Dizignit.DAL.csproj" />
     <ProjectReference Include="..\Dizignit.Domain\Dizignit.Domain.csproj" />
   </ItemGroup>
 
