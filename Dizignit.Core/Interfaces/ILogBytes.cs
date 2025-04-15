@@ -1,7 +1,9 @@
-﻿namespace Dizignit.Core.Interfaces
+﻿using Dizignit.Core.Enums;
+
+namespace Dizignit.Core.Interfaces
 {
     public interface ILogBytes
     {
-        void Log(byte[] message);
+        void Log(byte[] message, EImageType imageType);
     }
 }

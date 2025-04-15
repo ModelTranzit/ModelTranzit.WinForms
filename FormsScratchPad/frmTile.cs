@@ -1,23 +1,13 @@
-﻿using Dizignit.DAL;
-using Dizignit.Domain;
-using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using Dizignit.Core.Enums;
+using Dizignit.DAL.Logging;
 
 namespace Dizignit.Presentation
 {
     class frmTile : Form
     {
-
+        private RequestLog _requestLog;
         private Panel tilesPanel;
-
+        
         private void InitializeComponent()
         {
             btnGenBMP = new Button();
@@ -172,89 +162,54 @@ namespace Dizignit.Presentation
             }
         }
 
-        private void _displayAllBMP()
+        private Bitmap _createBlackWhiteBitmap(Bitmap bitmap)
         {
-            string[] tileFiles = Directory.GetFiles(@"bmp\", "*.bmp");
-            int tileSize = 1000; // Size of each tile
-            int padding = 10;   // Padding between tiles
-
-            int x = padding, y = padding;
-
-            foreach (string tileFile in tileFiles)
-            {
-                // Load the image
-                Image tileImage = Image.FromFile(tileFile);
-
-                // Create a PictureBox to display the tile
-                PictureBox pictureBox = new PictureBox
-                {
-                    Image = tileImage,
-                    Size = new Size(tileSize, tileSize),
-                    Location = new Point(x, y),
-                    SizeMode = PictureBoxSizeMode.StretchImage
-                };
-
-                // Add the PictureBox to the panel
-                tilesPanel.Controls.Add(pictureBox);
-
-                // Update x and y for the next tile
-                x += tileSize + padding;
-                if (x + tileSize > tilesPanel.Width) // Move to the next row
-                {
-                    x = padding;
-                    y += tileSize + padding;
-                }
-            }
-        }
-
-        private void _createBlackWhiteBitmap(Bitmap bitmap)
-        {
-            string railFilePath = @"C:\bmp\640x640rail.bmp";
             // this is going to be the new rail bitmap
-            var railBits = new Bitmap(bitmap.Width, bitmap.Height);
-
-            // Loop through every pixel in the image
-            for (int y = 0; y < bitmap.Height; y++)
+            using (var railBits = new Bitmap(bitmap.Width, bitmap.Height))
             {
-                for (int x = 0; x < bitmap.Width; x++)
+                // Loop through every pixel in the image
+                for (int y = 0; y < bitmap.Height; y++)
                 {
-                    var color = bitmap.GetPixel(x, y);
-                    var hexValue = ColorToHex(color).ToUpper();
-
-                    // now we need to know if the color is one of the rail colors
-                    // if it is, we need to change it to make the color black
-                    // if not then the pixel should be white
-
-                    var railColors = new List<string>
+                    for (int x = 0; x < bitmap.Width; x++)
                     {
-                        "#cdd1d5".ToUpper(),
-                        "#d1d1d5".ToUpper(),
-                        "#d8d8da".ToUpper()
-                    };
+                        var color = bitmap.GetPixel(x, y);
+                        var hexValue = ColorToHex(color).ToUpper();
 
-                    // if rail color exists then draw it 
-                    if (railColors.Contains(hexValue))
-                    {
-                        // Change the pixel color to black
-                        railBits.SetPixel(x, y, Color.Black);
+                        // now we need to know if the color is one of the rail colors
+                        // if it is, we need to change it to make the color black
+                        // if not then the pixel should be white
+
+                        var railColors = new List<string>
+                        {
+                            "#cdd1d5".ToUpper(),
+                            "#d1d1d5".ToUpper(),
+                            "#d8d8da".ToUpper()
+                        };
+
+                        // if rail color exists then draw it 
+                        if (railColors.Contains(hexValue))
+                        {
+                            // Change the pixel color to black
+                            railBits.SetPixel(x, y, Color.Black);
+                        }
                     }
-
-                    // Print the hex value
-                    pctOneColorBitmap.Image = new Bitmap(railBits);
-                    txtDebug.Text = $"Pixel at ({x}, {y}): {hexValue}";
                 }
+
+                // Black bitmap of rails
+                LogImage(BitmapToByteArray(bitmap), EImageType.Black);
+
+                pctOneColorBitmap.Image = new Bitmap(railBits);
+                txtDebug.Text = $"Sucsess: Height: {railBits.Height} Width: {railBits.Width} ";
+
+                return railBits;
             }
-
-            // now we are ready to save the new bitmap is a 2 bit bitmap
-            //pctRailBmp.Image = railBits;
-            //railBits.Save(filePath, ImageFormat.MemoryBmp);
-            txtDebug.Text = $"Sucsess: Height: {railBits.Height} Width: {railBits.Width} ";
-            railBits.Dispose();
-
         }
 
         private async void btnGenBMP_Click(object sender, EventArgs e)
         {
+            _requestLog = new RequestLog();
+            _requestLog.Log(); // Not sure how I feel about this. 
+
             // generate an image based on user input
             // check to see if image exists first
             // if it does, load it
@@ -265,8 +220,6 @@ namespace Dizignit.Presentation
             // using the Google Maps Static API
             // this will find and replace colors in the bitmap. 
             // we will neet to create a bitmap and loop through the pixels
-
-            var logger = new SQLLogger();
 
             string apiKey = Environment.GetEnvironmentVariable("GoogleMapsAPIKey");
 
@@ -291,19 +244,25 @@ namespace Dizignit.Presentation
                 {
                     var image = await FetchImageAsync(url);
                     // this logs the full colr bitmap to transLog
-                    logger.Log(image); // there is a bug here in that the Log() method is still publicly exposed. This will likely error.
+                    LogImage(image, EImageType.FullColor);
 
                     if (image != null)
                     {
                         try
                         {
+                            Bitmap blackBitmap;
                             using (var ms = new MemoryStream(image))
                             {
                                 // thisis setting the UI picture box
                                 pctFullColor.Image = Image.FromStream(ms);
 
                                 // now we need to convert this to a black and white bitmap
-                                _createBlackWhiteBitmap(new Bitmap(ms));
+                                blackBitmap = _createBlackWhiteBitmap(new Bitmap(ms));
+
+                                // now we need to make the plots lines 
+
+
+
                             }
                         }
                         catch (Exception ex)
@@ -312,6 +271,7 @@ namespace Dizignit.Presentation
                         }
                         finally
                         {
+
                         }
                     }
                     else
@@ -337,9 +297,16 @@ namespace Dizignit.Presentation
             // lets try and draw a moveable rectagle around a pictureBox
 
 
-
-
+            // meed a way to update the error code on sucess 
+            //_requestLog.Log();
         }
+
+        public static byte[] BitmapToByteArray(Bitmap bitmap)
+        {
+            ImageConverter converter = new ImageConverter();
+            return (byte[])converter.ConvertTo(bitmap, typeof(byte[]));
+        }
+
 
         // Method to convert a Color object to a hex string
         static string ColorToHex(Color color)
@@ -371,6 +338,12 @@ namespace Dizignit.Presentation
             //var line = buff.Render(railBits);
             //line.Save(filePath.Replace("rail", "rail-lines"));
             //pctLines.Image = Image.FromFile(filePath.Replace("rail", "rail-lines"));
+        }
+
+        public void LogImage(byte[] message, EImageType imageType)
+        {
+            var imageLog = new ImageLog(message, imageType, _requestLog.RequestID);
+            imageLog.Log();
         }
     }
 }

@@ -1,18 +1,13 @@
-﻿using System.Drawing;
+﻿using Dizignit.Core.Enums;
+using Dizignit.Core.Helpers;
+using Dizignit.DAL.Logging;
+using System.Drawing;
 using System.Drawing.Imaging;
 
 namespace Dizignit.Domain
 {
     public class LineRenderer
     {
-        public string FilePath { get; set; }
-
-        public LineRenderer(string filePath)
-        {
-            FilePath = filePath;
-        }
-
-
         public Bitmap Render(Bitmap bitmap)
         {
             // Load the image file
@@ -25,8 +20,8 @@ namespace Dizignit.Domain
             Bitmap edgeBitmap = ApplySobelFilter(grayscaleBitmap);
 
             // Save the edge-detected image
-            edgeBitmap.Save(FilePath, ImageFormat.Bmp);
-            Console.WriteLine("Edge-detected image saved as edges.bmp");
+            var imageLog = new ImageLog(BitmapHelper.BitmapToByteArray(edgeBitmap), EImageType.Line, "");
+
 
             return edgeBitmap;
         }
