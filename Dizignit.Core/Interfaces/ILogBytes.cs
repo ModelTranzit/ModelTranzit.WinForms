@@ -4,6 +4,6 @@ namespace Dizignit.Core.Interfaces
 {
     public interface ILogBytes
     {
-        void Log(byte[] message, EImageType imageType);
+        void Log(byte[] message, ETileType imageType);
     }
 }

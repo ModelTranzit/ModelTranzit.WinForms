@@ -9,12 +9,12 @@ namespace Dizignit.DAL.Logging
     {
         public string RequestID { get; private set; }
         private DateTime _transStartUTC { get; set; }
-        private EImageType _ImageType { get; set; }
+        private ETileType _ImageType { get; set; }
         private byte[] _binaryData { get; set; }
         private readonly string _connectionString;
         private ILoggable _log;
 
-        public ImageLog(byte[] binaryData, EImageType imageType, string requestID)
+        public ImageLog(byte[] binaryData, ETileType imageType, string requestID)
         {
             // this a foriegn key
             RequestID = requestID;
@@ -25,7 +25,7 @@ namespace Dizignit.DAL.Logging
             _ImageType = imageType;
         }
 
-        public bool Log()
+        public void Log()
         {
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
@@ -55,13 +55,12 @@ namespace Dizignit.DAL.Logging
                         // Execute the stored procedure
                         command.ExecuteNonQuery();
                     }
-                    return true;
                 }
                 catch (Exception ex)
                 {
                     var errorLog = new ErrorLog(RequestID, ex.Message, ex.StackTrace);
                     errorLog.Log();
-                    return false;
+                    throw;
                 }
             }
         }

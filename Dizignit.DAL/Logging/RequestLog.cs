@@ -18,7 +18,7 @@ namespace Dizignit.DAL.Logging
             _connectionString = Environment.GetEnvironmentVariable("SQL-ModelTranzitConnectionString");
         }
 
-        public bool Log()
+        public void Log()
         {
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
@@ -43,14 +43,13 @@ namespace Dizignit.DAL.Logging
                         // Execute the stored procedure
                         command.ExecuteNonQuery();
                     }
-                    return true;
                 }
                 catch (Exception ex)
                 {
                     var errorlog = new ErrorLog(RequestID, ex.Message, ex.StackTrace);
                     errorlog.Log();
                     Console.WriteLine($"An error occurred while logging the transaction: {ex.Message}");
-                    return false;
+                    throw;
                 }
             }
         }

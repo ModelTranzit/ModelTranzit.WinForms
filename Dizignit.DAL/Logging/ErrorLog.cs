@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using Dizignit.Core.Interfaces;
+﻿using Dizignit.Core.Interfaces;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
@@ -21,7 +20,7 @@ namespace Dizignit.DAL.Logging
             _errorDateTimeUTC = DateTime.UtcNow;
         }
 
-        public bool Log() 
+        public void Log() 
         {
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
@@ -48,13 +47,12 @@ namespace Dizignit.DAL.Logging
                         // Execute the stored procedure
                         command.ExecuteNonQuery();
                     }
-                    return true;
                 }
                 catch (Exception ex)
                 {
                     var errorLog = new ErrorLog(_requestID, ex.Message, ex.StackTrace);
                     errorLog.Log();
-                    return false;
+                    throw;
                 }
             }
         }

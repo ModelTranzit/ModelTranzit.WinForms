@@ -1,6 +1,6 @@
 ﻿namespace Dizignit.Core.Enums
 {
-    public enum EImageType
+    public enum ETileType
     {
         FullColor,
         Black,

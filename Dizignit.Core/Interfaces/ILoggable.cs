@@ -2,6 +2,6 @@
 {
     public interface ILoggable
     {
-        bool Log();
+        void Log();
     }
 }
