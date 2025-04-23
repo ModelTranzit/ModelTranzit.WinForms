@@ -4,6 +4,8 @@ using Dizignit.Core.Helpers;
 using Dizignit.DAL;
 using Dizignit.DAL.Logging;
 using Dizignit.Domain;
+using System.Text;
+using System.Windows.Forms;
 
 namespace Dizignit.Presentation
 {
@@ -11,10 +13,9 @@ namespace Dizignit.Presentation
     {
         private RequestLog _requestLog;
         private Button btnSaveBitmap;
-        private PictureBox Tile1;
-        private PictureBox Tile2;
         private Label lblNewLatitude;
         private Label lblNewLongitute;
+        private FlowLayoutPanel imgCanvas;
         private Panel tilesPanel;
 
         private void InitializeComponent()
@@ -27,12 +28,9 @@ namespace Dizignit.Presentation
             lblZoom = new TextBox();
             txtDebug = new TextBox();
             btnSaveBitmap = new Button();
-            Tile1 = new PictureBox();
-            Tile2 = new PictureBox();
             lblNewLatitude = new Label();
             lblNewLongitute = new Label();
-            ((System.ComponentModel.ISupportInitialize)Tile1).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)Tile2).BeginInit();
+            imgCanvas = new FlowLayoutPanel();
             SuspendLayout();
             // 
             // btnGenBMP
@@ -103,24 +101,6 @@ namespace Dizignit.Presentation
             btnSaveBitmap.UseVisualStyleBackColor = true;
             btnSaveBitmap.Click += btnSaveBitmap_Click;
             // 
-            // Tile1
-            // 
-            Tile1.BorderStyle = BorderStyle.FixedSingle;
-            Tile1.Location = new Point(333, 715);
-            Tile1.Name = "Tile1";
-            Tile1.Size = new Size(640, 640);
-            Tile1.TabIndex = 13;
-            Tile1.TabStop = false;
-            // 
-            // Tile2
-            // 
-            Tile2.BorderStyle = BorderStyle.FixedSingle;
-            Tile2.Location = new Point(333, 69);
-            Tile2.Name = "Tile2";
-            Tile2.Size = new Size(640, 640);
-            Tile2.TabIndex = 14;
-            Tile2.TabStop = false;
-            // 
             // lblNewLatitude
             // 
             lblNewLatitude.AutoSize = true;
@@ -139,13 +119,20 @@ namespace Dizignit.Presentation
             lblNewLongitute.TabIndex = 16;
             lblNewLongitute.Text = "label2";
             // 
+            // imgCanvas
+            // 
+            imgCanvas.AutoScroll = true;
+            imgCanvas.Location = new Point(55, 119);
+            imgCanvas.Name = "imgCanvas";
+            imgCanvas.Size = new Size(30000, 30000);
+            imgCanvas.TabIndex = 17;
+            // 
             // frmTile
             // 
             ClientSize = new Size(1881, 1016);
+            Controls.Add(imgCanvas);
             Controls.Add(lblNewLongitute);
             Controls.Add(lblNewLatitude);
-            Controls.Add(Tile2);
-            Controls.Add(Tile1);
             Controls.Add(btnSaveBitmap);
             Controls.Add(txtDebug);
             Controls.Add(lblZoom);
@@ -155,8 +142,6 @@ namespace Dizignit.Presentation
             Controls.Add(lblLatitude);
             Controls.Add(btnGenBMP);
             Name = "frmTile";
-            ((System.ComponentModel.ISupportInitialize)Tile1).EndInit();
-            ((System.ComponentModel.ISupportInitialize)Tile2).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -174,15 +159,6 @@ namespace Dizignit.Presentation
             this.Text = "BMP Tiles Display";
             this.Size = new Size(1920, 1200);
             InitializeComponent();
-
-            // Set up the panel
-            tilesPanel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                AutoScroll = true // Enable scrolling for overflow
-            };
-
-            this.Controls.Add(tilesPanel);;
         }
 
         private async void btnGenBMP_Click(object sender, EventArgs e)
@@ -190,51 +166,107 @@ namespace Dizignit.Presentation
             _requestLog = new RequestLog();
             _requestLog.Log();
 
-            var httpApiRequest = new HttpApiRequest(
-                new MapCordinate(decimal.Parse(lblLatitude.Text), decimal.Parse(lblLongitude.Text)), 
-                int.Parse(lblSize.Text), 
-                int.Parse(lblZoom.Text));
+            // Get the coordinates from the text boxes
+            double latitude = double.Parse(lblLatitude.Text);
+            double longitude = double.Parse(lblLongitude.Text);
 
-            // create a tile based the form 
-            var tile = new MapTile(
-                await httpApiRequest.GetImageAsync(),
-                new MapCordinate(decimal.Parse(lblLatitude.Text), decimal.Parse(lblLongitude.Text)),
-                int.Parse(lblZoom.Text),
-                int.Parse(lblSize.Text),
-                ETileType.FullColor);
+            // Get the zoom level and tile size from the text boxes
+            int zoomLevel = Constants.Zoom;
 
-            var tileRenderer = new TileRenderer(_requestLog.RequestID);
-            var blackWhiteTile = tileRenderer.ConverTileToBlack(tile.Pixels, new MapBitDepth(int.Parse(lblSize.Text), 15, 50));
+            int tileSize = Constants.TileSize;
 
-            Tile1.Image = BitmapHelper.ByteArrayToBitmap(blackWhiteTile);
+            // Get the pixels per degree from the text box
+            double pixelsPerDegree = Constants.PixelsPerDegree;
+
+            // user map selection 
+            var upperLeftCordinate = new MapCordinate(39.9725515, -75.1983052);
+            var lowerRightCordinate = new MapCordinate(39.9556774, -75.1801474);
 
 
-            // lets caluclate the next tile 
-            var calcTile = TileCalculator.CalculateAdjacentTileCenter(
-                new MapCordinate(decimal.Parse(lblLatitude.Text), decimal.Parse(lblLongitude.Text)), 
-                int.Parse(lblSize.Text),
-                decimal.Parse(lblPixelsPerDegree.Text),
-                ETileDirection.North);
+            // Create a new MapCoordinate object
+            var centerCoordinate = TileCalculator.CalculateCenter(upperLeftCordinate, lowerRightCordinate);
 
-            httpApiRequest = new HttpApiRequest(
-                calcTile, 
-                int.Parse(lblSize.Text), 
-                int.Parse(lblZoom.Text));
+            // Calculate the tile center
+            var tileCenter = TileCalculator.CalculateTileCenter(centerCoordinate, tileSize, pixelsPerDegree);
 
-            var nexTile = new MapTile(
-                await httpApiRequest.GetImageAsync(),
-                new MapCordinate(calcTile.Latitude, calcTile.Longitude),
-                int.Parse(lblZoom.Text),
-                int.Parse(lblSize.Text),
-                ETileType.Black);
+            // Calculate the adjacent tile centers
+            var northTileCenter = TileCalculator.CalculateAdjacentTileCenter(tileCenter, tileSize, pixelsPerDegree, ETileDirection.North);
+            var southTileCenter = TileCalculator.CalculateAdjacentTileCenter(tileCenter, tileSize, pixelsPerDegree, ETileDirection.South);
+            var eastTileCenter = TileCalculator.CalculateAdjacentTileCenter(tileCenter, tileSize, pixelsPerDegree, ETileDirection.East);
+            var westTileCenter = TileCalculator.CalculateAdjacentTileCenter(tileCenter, tileSize, pixelsPerDegree, ETileDirection.West);
+;
+            // Generate the tiles based on uaer selected cordinantes
+            var tiles = await TileGenerator.GenerateTiles(upperLeftCordinate, lowerRightCordinate, _requestLog.RequestID);
 
-            lblNewLatitude.Text = nexTile.Cordinate.Latitude.ToString();
-            lblNewLongitute.Text = nexTile.Cordinate.Longitude.ToString();  
 
-            tileRenderer = new TileRenderer(_requestLog.RequestID);
-            var nextBytes = tileRenderer.ConverTileToBlack(nexTile.Pixels, new MapBitDepth(int.Parse(lblSize.Text), 15, 50));
+            // get all files from drive 
+            var images = Directory.GetFiles("C:\\images");
 
-            Tile2.Image = BitmapHelper.ByteArrayToBitmap(nextBytes);
+            var folderPath = "C:\\images"; // Path to the folder containing BMP files
+            imgCanvas.Controls.Clear(); // Clear previous images
+            imgCanvas.AutoScroll = true;
+
+
+            var bmpFiles = Directory.GetFiles(folderPath, "*.bmp")
+                     .Select(file => new FileInfo(file))
+                     .OrderBy(fileInfo => fileInfo.CreationTime);
+
+
+            AddImagesToPanel(LoadImages());
+        }
+
+
+
+
+        private List<Bitmap> LoadImages()
+        {
+
+
+            var retVal = new List<Bitmap>();
+            var folderPath = "C:\\images"; // Path to the folder containing BMP files
+            var bmpFiles = Directory.GetFiles(folderPath, "*.bmp")
+                     .Select(file => new FileInfo(file))
+                     .OrderBy(fileInfo => fileInfo.CreationTime);
+
+            foreach (var file in bmpFiles)
+            {
+                retVal.Add(new Bitmap(file.FullName));
+            }
+
+            return retVal;
+        }
+
+        private void AddImagesToPanel(List<Bitmap> bmpFiles)
+        {
+            int x = 10; // Starting X position
+            int y = 10; // Starting Y position
+            int padding = 10; // Space between images
+            int imagesPerRow = 15; // Number of images per row
+            int currentImage = 0;
+
+            foreach (Bitmap bmp in bmpFiles)
+            {
+                PictureBox picBox = new PictureBox();
+                picBox.Size = new Size(Constants.TileSize, Constants.TileSize);
+                picBox.Image = bmp;
+                picBox.SizeMode = PictureBoxSizeMode.Zoom;
+                picBox.Location = new Point(x, y);
+
+                imgCanvas.Controls.Add(picBox);
+
+                x += picBox.Width + padding;
+                currentImage++;
+
+                // Move to the next row after reaching the specified number of images per row
+                if (currentImage % imagesPerRow == 0)
+                {
+                    x = 10; // Reset X position
+                    y += picBox.Height + padding; // Move Y position down
+                }
+            }
+
+            // Adjust AutoScrollMinSize to accommodate all images
+            imgCanvas.AutoScrollMinSize = new Size(imgCanvas.Width, y + 100);
         }
 
         public void LogImage(byte[] message, ETileType imageType)

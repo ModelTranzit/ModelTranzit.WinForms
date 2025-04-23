@@ -7,8 +7,8 @@ namespace Dizignit.DAL
     {
         private string _url { get; set; }
         private string _apiKey { get; set; }
-        private string _latitude { get; set; }
-        private string _longitude { get; set; }
+        private double _latitude { get; set; }
+        private double _longitude { get; set; }
         private int _zoom { get; set; }
         private int _size { get; set; }
 
@@ -20,8 +20,8 @@ namespace Dizignit.DAL
             if (string.IsNullOrEmpty(_apiKey))
                 throw new Exception("GoogleMapsAPIKey variable not set.");
 
-            _latitude = cordinate.Latitude.ToString();
-            _longitude = cordinate.Longitude.ToString();
+            _latitude = cordinate.Latitude;
+            _longitude = cordinate.Longitude;
             _size = size;
             _zoom = zooom;
 
@@ -30,6 +30,9 @@ namespace Dizignit.DAL
 
         public async Task<byte[]> GetImageAsync()
         {
+            var request = new HttpApiRequest(new MapCordinate(_latitude, _longitude), Constants.TileSize, Constants.Zoom);
+
+
             using (HttpClient client = new HttpClient())
             {
                 HttpResponseMessage response = await client.GetAsync(_url);

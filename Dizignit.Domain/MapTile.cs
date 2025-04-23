@@ -1,5 +1,6 @@
 ﻿using Dizignit.Core;
 using Dizignit.Core.Enums;
+using Dizignit.DAL;
 
 namespace Dizignit.Domain
 {
@@ -11,19 +12,28 @@ namespace Dizignit.Domain
         public ETileType ImageType { get; set; }
         public int Size { get; set; }
 
+        public MapTile(MapCordinate cordinate, ETileType tileType = ETileType.Unknown)
+        {
+            Cordinate = new MapCordinate(cordinate.Latitude, cordinate.Longitude);
+            Pixels = new byte[Constants.TileSize * Constants.TileSize];
+            ImageType = ETileType.Unknown;
+            Size = Constants.TileSize;
+        }
+
         public MapTile(byte[] pixels, MapCordinate cordinate, int zoom, int size, ETileType imageType)
         {
             Cordinate = new MapCordinate(cordinate.Latitude, cordinate.Longitude);
-            Pixels = new byte[size * size];
             Pixels = pixels;
             Zoom = zoom;
             ImageType = imageType;
             Size = size;
         }
 
-        public MapTile GetTile(TileRenderer tileRenderer, byte[] pixels)
-        {
-            return new MapTile(pixels, Cordinate, Zoom, Size, ImageType);
-        }
+        //public async Task<MapTile> GetTileAsync(TileRenderer tileRenderer)
+        //{
+        //    var api = new HttpApiRequest(Cordinate, Size, Zoom);
+        //    Pixels = tileRenderer.ConverTileToBlack(await api.GetImageAsync(), new MapBitDepth());
+        //    return new MapTile(Pixels, Cordinate, Zoom, Size, ImageType);
+        //}
     }
 }

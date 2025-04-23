@@ -4,6 +4,7 @@
     {
         FullColor,
         Black,
-        Line
+        Line,
+        Unknown
     }
 }

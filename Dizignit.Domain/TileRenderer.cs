@@ -36,9 +36,17 @@ namespace Dizignit.Domain
 
                         var railColors = new List<string>
                         {
-                            "#DADEDE".ToUpper(),
-                            "#CDD0D4".ToUpper(),
-                            "#C1C5C9".ToUpper(),
+                            "#e9eaef".ToUpper(),
+                            "#c3c7cb".ToUpper(),
+                            "#e6e6e6".ToUpper(),
+                            "#d9d9e3".ToUpper(),
+                            "#cfd2d5".ToUpper(),
+                            "#d9dcdc".ToUpper(),
+                            "#e3e6e6".ToUpper(),
+                            "#cccfd2".ToUpper(),
+                            "#cfd2d5".ToUpper(),
+                            "#dddfe6".ToUpper(),
+                            //"#".ToUpper()
                         };
 
                         // if rail color exists then draw it 
@@ -46,6 +54,11 @@ namespace Dizignit.Domain
                         {
                             // Change the pixel color to black
                             railBits.SetPixel(x, y, Color.Black);
+                        }
+                        else
+                        {
+                            // Change the pixel color to white
+                            railBits.SetPixel(x, y, Color.White);
                         }
                     }
                 }

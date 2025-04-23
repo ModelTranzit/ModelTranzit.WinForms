@@ -16,11 +16,11 @@
         /// incremental distance between points to consider as a point
         /// </summary>
         public int MinDistance { get; set; }
-        public MapBitDepth(int tileResolution, int minDegrees, int minDistance)
+        public MapBitDepth()
         {
-            TileResolution = tileResolution;
-            MinDegrees = minDegrees;
-            MinDistance = minDistance;
+            TileResolution = Constants.TileSize;
+            MinDegrees = 1;
+            MinDistance = 90;
         }
     }
 }
